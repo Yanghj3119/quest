@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>제주 관광지·명소</title>
+<style>
+  :root {
+    --bg: #f4f8f6; --card: #fff; --text: #1d2b27; --muted: #5d6f69;
+    --accent: #0f8a6d; --accent-soft: #dff3ec; --star: #f5a623; --line: #dbe6e1;
+    --shadow: 0 2px 10px rgba(20, 60, 50, .08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #101816; --card: #18231f; --text: #e7f0ec; --muted: #9fb3ac;
+      --accent: #3fc9a2; --accent-soft: #1f3a32; --line: #2a3b35;
+      --shadow: 0 2px 10px rgba(0, 0, 0, .4);
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: -apple-system, "Pretendard", "Malgun Gothic", sans-serif; line-height: 1.5; }
+  header { padding: 40px 16px 20px; text-align: center; }
+  header h1 { margin: 0 0 6px; font-size: clamp(1.6rem, 4vw, 2.2rem); }
+  header p { margin: 0; color: var(--muted); }
+  .tools { position: sticky; top: 0; z-index: 5; background: var(--bg);
+    padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .tools-inner { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+  #q { width: 100%; padding: 10px 14px; font-size: 1rem; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--card); color: var(--text); }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
+  .chip { flex: none; border: 1px solid var(--line); background: var(--card); color: var(--text);
+    padding: 6px 12px; border-radius: 999px; cursor: pointer; font-size: .9rem; }
+  .chip .n { color: var(--muted); margin-left: 4px; font-size: .8rem; }
+  .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .chip[aria-pressed="true"] .n { color: #e6fff6; }
+  main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 60px; }
+  section { margin-top: 32px; }
+  section h2 { font-size: 1.3rem; margin: 0 0 14px; display: flex; align-items: baseline; gap: 8px; }
+  section h2 small { color: var(--muted); font-weight: 400; font-size: .85rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .card { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; }
+  .thumb { position: relative; aspect-ratio: 4 / 3; background: var(--accent-soft);
+    display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 2.4rem; }
+  .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+    opacity: 0; transition: opacity .4s; }
+  .thumb img.on { opacity: 1; }
+  .badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.65); color: #fff;
+    font-size: .78rem; padding: 2px 8px; border-radius: 999px; }
+  .pick { position: absolute; top: 8px; left: 8px; background: var(--star); color: #fff;
+    font-size: .78rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+  .credit { position: absolute; bottom: 6px; right: 8px; font-size: .68rem; color: #fff;
+    text-shadow: 0 0 4px rgba(0,0,0,.9); text-decoration: none; }
+  .body { padding: 12px 14px 14px; }
+  .body h3 { margin: 0 0 4px; font-size: 1.05rem; }
+  .body p { margin: 0; color: var(--muted); font-size: .88rem; }
+  .meta { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .tag { flex: none; background: var(--accent-soft); color: var(--accent); font-size: .75rem;
+    padding: 2px 8px; border-radius: 999px; }
+  .bar { flex: 1; height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); }
+  .src { display: inline-block; margin-top: 8px; font-size: .8rem; color: var(--accent); }
+  .empty { text-align: center; color: var(--muted); padding: 60px 0; }
+  footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 0 16px 40px; }
+  footer a { color: inherit; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="title">제주 관광지·명소</h1>
+  <p id="sub"></p>
+</header>
+<div class="tools">
+  <div class="tools-inner">
+    <input id="q" type="search" placeholder="관광지 이름이나 설명으로 검색" aria-label="검색">
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+<main id="main"></main>
+<footer>이미지 제공: <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> · 이미지는 이름으로 검색한 결과라 실제 장소와 다를 수 있습니다.</footer>
+
+<script>
+const ICONS = { '산/오름': '⛰️', '해변': '🏖️', '자연 명소': '🌋', '역사/문화': '🏛️', '폭포': '💦',
+  '정원/식물원': '🌺', '박물관/미술관': '🖼️', '시장': '🛍️', '건축/랜드마크': '🌉', '섬': '🏝️',
+  '테마파크': '🎡', '숲': '🌲', '동굴': '🕳️', '체험/카페': '🍵' };
+
+let DATA = null, activeCat = '전체', keyword = '';
+const imgCache = new Map();           // name -> Promise<{url,page,user}|null>
+
+// 페이지가 열리면 모든 관광지의 이미지를 자동으로 불러온다 (동시 요청 6개로 제한, 실패 시 1회 재시도)
+const MAX_PARALLEL = 6;
+let running = 0;
+const waiting = [];
+
+function pump() {
+  while (running < MAX_PARALLEL && waiting.length) {
+    const job = waiting.shift();
+    running++;
+    job().finally(() => { running--; pump(); });
+  }
+}
+
+function requestImage(item) {
+  const url = `/api/image?name=${encodeURIComponent(item.name)}&category=${encodeURIComponent(item.category)}`;
+  const once = () => fetch(url).then(r => r.ok ? r.json() : Promise.reject(r.status));
+  return once().catch(() => once()).catch(() => null);
+}
+
+function fetchImage(item) {
+  if (!imgCache.has(item.name)) {
+    imgCache.set(item.name, new Promise(resolve => {
+      waiting.push(() => requestImage(item).then(resolve));
+      pump();
+    }));
+  }
+  return imgCache.get(item.name);
+}
+
+function attachImage(thumb, item) {
+  fetchImage(item).then(info => {
+    if (!info || !info.url) return;
+    const img = new Image();
+    img.alt = item.name;
+    img.onload = () => {
+      img.classList.add('on');
+      const a = document.createElement('a');
+      a.className = 'credit'; a.href = info.page; a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'Pixabay / ' + info.user;
+      thumb.append(a);
+    };
+    img.src = info.url;
+    thumb.prepend(img);
+  });
+}
+
+function matches(it) {
+  if (activeCat !== '전체' && it.category !== activeCat) return false;
+  if (!keyword) return true;
+  return (it.name + ' ' + it.description + ' ' + it.category).toLowerCase().includes(keyword);
+}
+
+function card(it, i) {
+  const el = document.createElement('article');
+  el.className = 'card';
+  const thumb = document.createElement('div');
+  thumb.className = 'thumb';
+  thumb.dataset.i = i;
+  thumb.innerHTML = `<span aria-hidden="true">${ICONS[it.category] || '📍'}</span>` +
+    (it.selected ? '<span class="pick">★ 추천</span>' : '') +
+    `<span class="badge">${it.score}점</span>`;
+  const body = document.createElement('div');
+  body.className = 'body';
+  const h = document.createElement('h3'); h.textContent = it.name;
+  const p = document.createElement('p'); p.textContent = it.description;
+  const meta = document.createElement('div');
+  meta.className = 'meta';
+  meta.innerHTML = `<span class="tag"></span><span class="bar"><i style="width:${it.score}%"></i></span>`;
+  meta.querySelector('.tag').textContent = it.category;
+  body.append(h, p, meta);
+  if (it.source) {
+    const s = document.createElement('a');
+    s.className = 'src'; s.textContent = '출처 보기'; s.target = '_blank'; s.rel = 'noopener';
+    s.href = /^https?:\/\//.test(it.source) ? it.source : '#';
+    body.append(s);
+  }
+  el.append(thumb, body);
+  attachImage(thumb, it);
+  return el;
+}
+
+function render() {
+  const main = document.getElementById('main');
+  main.replaceChildren();
+  const groups = new Map();
+  DATA.items.forEach((it, i) => {
+    if (!matches(it)) return;
+    if (!groups.has(it.category)) groups.set(it.category, []);
+    groups.get(it.category).push([it, i]);
+  });
+  if (!groups.size) { main.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>'; return; }
+  const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length);
+  for (const cat of order) {
+    const sec = document.createElement('section');
+    const list = groups.get(cat).sort((a, b) => b[0].score - a[0].score);
+    sec.innerHTML = `<h2>${ICONS[cat] || ''} ${cat} <small>${list.length}곳</small></h2>`;
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    list.forEach(([it, i]) => grid.append(card(it, i)));
+    sec.append(grid);
+    main.append(sec);
+  }
+}
+
+function renderChips() {
+  const counts = {};
+  DATA.items.forEach(it => counts[it.category] = (counts[it.category] || 0) + 1);
+  const cats = Object.keys(counts).sort((a, b) => counts[b] - counts[a]);
+  const box = document.getElementById('chips');
+  box.replaceChildren();
+  ['전체', ...cats].forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.setAttribute('aria-pressed', String(c === activeCat));
+    b.innerHTML = `${c}<span class="n">${c === '전체' ? DATA.items.length : counts[c]}</span>`;
+    b.onclick = () => { activeCat = c; renderChips(); render(); };
+    box.append(b);
+  });
+}
+
+fetch('jeju_attractions.json').then(r => r.json()).then(d => {
+  DATA = d;
+  document.getElementById('title').textContent = d.topic;
+  document.getElementById('sub').textContent = `${d.region} · 카테고리별 ${d.items.length}곳`;
+  renderChips(); render();
+  document.getElementById('q').addEventListener('input', e => {
+    keyword = e.target.value.trim().toLowerCase(); render();
+  });
+}).catch(() => {
+  document.getElementById('main').innerHTML = '<div class="empty">데이터를 불러오지 못했습니다.</div>';
+});
+</script>
+</body>
+</html>
