@@ -18,6 +18,7 @@
     }
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body { margin: 0; background: var(--bg); color: var(--text);
     font-family: -apple-system, "Pretendard", "Malgun Gothic", sans-serif; line-height: 1.5; }
   header { padding: 40px 16px 20px; text-align: center; }
@@ -35,23 +36,19 @@
   .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
   .chip[aria-pressed="true"] .n { color: #e6fff6; }
   main { max-width: 1200px; margin: 0 auto; padding: 8px 16px 60px; }
-  section { margin-top: 32px; }
-  section h2 { font-size: 1.3rem; margin: 0 0 14px; display: flex; align-items: baseline; gap: 8px; }
-  section h2 small { color: var(--muted); font-weight: 400; font-size: .85rem; }
+  section { margin-top: 36px; scroll-margin-top: 120px; }
+  .sec-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 14px; }
+  .sec-head h2 { margin: 0; font-size: 1.35rem; }
+  .sec-head small { color: var(--muted); font-size: .85rem; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
   .card { background: var(--card); border-radius: 14px; overflow: hidden; box-shadow: var(--shadow);
     display: flex; flex-direction: column; }
   .thumb { position: relative; aspect-ratio: 4 / 3; background: var(--accent-soft);
-    display: flex; align-items: center; justify-content: center; color: var(--accent); font-size: 2.4rem; }
-  .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    opacity: 0; transition: opacity .4s; }
-  .thumb img.on { opacity: 1; }
+    display: flex; align-items: center; justify-content: center; font-size: 4.2rem; }
   .badge { position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,.65); color: #fff;
     font-size: .78rem; padding: 2px 8px; border-radius: 999px; }
   .pick { position: absolute; top: 8px; left: 8px; background: var(--star); color: #fff;
     font-size: .78rem; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
-  .credit { position: absolute; bottom: 6px; right: 8px; font-size: .68rem; color: #fff;
-    text-shadow: 0 0 4px rgba(0,0,0,.9); text-decoration: none; }
   .body { padding: 12px 14px 14px; }
   .body h3 { margin: 0 0 4px; font-size: 1.05rem; }
   .body p { margin: 0; color: var(--muted); font-size: .88rem; }
@@ -63,7 +60,6 @@
   .src { display: inline-block; margin-top: 8px; font-size: .8rem; color: var(--accent); }
   .empty { text-align: center; color: var(--muted); padding: 60px 0; }
   footer { text-align: center; color: var(--muted); font-size: .8rem; padding: 0 16px 40px; }
-  footer a { color: inherit; }
 </style>
 </head>
 <body>
@@ -78,61 +74,31 @@
   </div>
 </div>
 <main id="main"></main>
-<footer>이미지 제공: <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a> · 이미지는 이름으로 검색한 결과라 실제 장소와 다를 수 있습니다.</footer>
+<footer>카테고리별 이모티콘으로 장소를 표시합니다. 점수는 임의로 매긴 추정치입니다.</footer>
 
 <script>
-const ICONS = { '산/오름': '⛰️', '해변': '🏖️', '자연 명소': '🌋', '역사/문화': '🏛️', '폭포': '💦',
+// jeju_attractions.json을 불러오고, 파일로 직접 열어 fetch가 막히면 아래 내장 데이터를 사용한다.
+const EMBEDDED = {"region":"제주특별자치도","topic":"제주 관광지·명소","items":[{"name":"성산일출봉","category":"자연 명소","description":"제주 동쪽 성산에 있는 관광 명소","score":95,"selected":true,"source":""},{"name":"천지연폭포","category":"폭포","description":"서귀포에 있는 폭포 명소","score":70,"selected":false,"source":""},{"name":"한라산","category":"산/오름","description":"해발 1,947m의 남한 최고봉이자 유네스코 세계자연유산 지역으로, 백록담 등반으로 유명","score":96,"selected":false,"source":""},{"name":"만장굴","category":"동굴","description":"세계적 규모의 용암동굴로 유네스코 세계자연유산에 포함된 구좌읍의 동굴","score":85,"selected":false,"source":""},{"name":"협재해수욕장","category":"해변","description":"에메랄드빛 바다와 하얀 모래, 비양도 조망이 아름다운 한림읍의 해변","score":90,"selected":false,"source":""},{"name":"함덕해수욕장","category":"해변","description":"얕고 투명한 바다와 서우봉이 어우러진 조천읍의 대표 해변","score":88,"selected":false,"source":""},{"name":"우도","category":"섬","description":"성산포 앞 소가 누운 모양의 섬으로 땅콩 아이스크림과 자전거 일주가 인기","score":92,"selected":false,"source":""},{"name":"섭지코지","category":"자연 명소","description":"붉은 화산재 언덕과 등대, 유채꽃밭이 어우러진 성산 인근 해안 절경","score":89,"selected":false,"source":""},{"name":"용머리해안","category":"자연 명소","description":"용이 바다로 들어가는 모습을 닮은 수성화산 퇴적층 해안 절벽","score":82,"selected":false,"source":""},{"name":"중문대포해안 주상절리대","category":"자연 명소","description":"육각 기둥 모양 용암 절벽이 파도와 부딪히는 천연기념물 해안","score":84,"selected":false,"source":""},{"name":"정방폭포","category":"폭포","description":"바다로 직접 떨어지는 동양 유일의 해안 폭포로 서귀포 시내에 위치","score":80,"selected":false,"source":""},{"name":"천제연폭포","category":"폭포","description":"중문관광단지 인근의 3단 폭포와 선임교 칠선녀 다리가 있는 계곡","score":78,"selected":false,"source":""},{"name":"엉또폭포","category":"폭포","description":"평소엔 말라 있다가 폭우 뒤에만 장관을 이루는 서귀포의 숨은 폭포","score":68,"selected":false,"source":""},{"name":"쇠소깍","category":"자연 명소","description":"하천과 바다가 만나는 효돈천 하구의 에메랄드빛 협곡, 테우·카약 체험 가능","score":81,"selected":false,"source":""},{"name":"비자림","category":"숲","description":"500~800년 된 비자나무 2,800여 그루가 군락을 이룬 천연 산책 숲","score":86,"selected":false,"source":""},{"name":"사려니숲길","category":"숲","description":"삼나무와 활엽수가 우거진 약 15km 힐링 숲길, 물찻오름 연결","score":87,"selected":false,"source":""},{"name":"카멜리아힐","category":"정원/식물원","description":"동백나무 군락이 있는 아시아 최대급 동백 수목원, 겨울 포토 명소","score":83,"selected":false,"source":""},{"name":"휴애리 자연생활공원","category":"정원/식물원","description":"계절 꽃축제와 동물 먹이주기 체험이 가능한 서귀포 가족 여행지","score":76,"selected":false,"source":""},{"name":"한림공원","category":"정원/식물원","description":"협재굴·쌍용굴 등 용암동굴과 아열대식물원, 분재원을 함께 보는 테마 공원","score":77,"selected":false,"source":""},{"name":"생각하는정원","category":"정원/식물원","description":"분재예술원에서 출발한 한국 전통 정원 스타일의 수목 정원","score":72,"selected":false,"source":""},{"name":"제주 에코랜드 테마파크","category":"테마파크","description":"곶자왈 숲을 기차로 돌아보는 생태 테마파크, 증기기관차 체험","score":79,"selected":false,"source":""},{"name":"오설록 티뮤지엄","category":"체험/카페","description":"녹차밭 풍경과 차 박물관, 녹차 디저트를 즐길 수 있는 서귀포 안덕면 명소","score":80,"selected":false,"source":""},{"name":"아쿠아플라넷 제주","category":"테마파크","description":"성산 섭지코지 인근의 아시아 최대급 수족관, 해녀 공연과 대형 수조 관람","score":82,"selected":false,"source":""},{"name":"본태박물관","category":"박물관/미술관","description":"안도 다다오가 설계한 노출 콘크리트 건축과 한국 전통 공예·현대미술 전시","score":74,"selected":false,"source":""},{"name":"김영갑갤러리 두모악","category":"박물관/미술관","description":"사진가 김영갑이 제주의 오름과 바람을 담아낸 폐교 개조 갤러리","score":70,"selected":false,"source":""},{"name":"제주 돌문화공원","category":"박물관/미술관","description":"제주 돌 문화와 설문대할망 신화를 주제로 한 대규모 공원 겸 전시관","score":69,"selected":false,"source":""},{"name":"제주민속촌","category":"역사/문화","description":"19세기 말 제주의 생활상과 초가를 재현한 표선면 민속 테마촌","score":66,"selected":false,"source":""},{"name":"성읍민속마을","category":"역사/문화","description":"조선시대 정의현 읍성 마을로 초가와 돌담이 남아 있는 중요민속문화재 마을","score":67,"selected":false,"source":""},{"name":"제주4·3평화공원","category":"역사/문화","description":"제주 4·3 사건의 희생자를 기리고 역사를 기록한 평화기념관과 위령 공간","score":73,"selected":false,"source":""},{"name":"방주교회","category":"건축/랜드마크","description":"노아의 방주를 모티브로 이타미 준이 설계한 물 위의 교회 건축물","score":71,"selected":false,"source":""},{"name":"산방산","category":"산/오름","description":"거대한 종 모양의 용암 돔으로 안덕면 바다 앞에 솟은 제주 남서부의 상징","score":85,"selected":false,"source":""},{"name":"송악산","category":"산/오름","description":"이중 분화구와 해안 절벽, 형제섬·마라도 조망이 뛰어난 둘레길 명소","score":79,"selected":false,"source":""},{"name":"새별오름","category":"산/오름","description":"넓은 억새밭과 정월대보름 들불축제로 유명한 서쪽 대표 오름","score":80,"selected":false,"source":""},{"name":"금오름","category":"산/오름","description":"정상의 호수형 분화구와 일몰 풍경으로 사랑받는 협재 인근 오름","score":78,"selected":false,"source":""},{"name":"용눈이오름","category":"산/오름","description":"완만한 능선과 곡선미로 \u0027오름의 여왕\u0027이라 불리는 구좌읍 오름","score":79,"selected":false,"source":""},{"name":"다랑쉬오름","category":"산/오름","description":"깊고 둥근 분화구가 인상적인 동부 오름, 일출 감상 명소","score":77,"selected":false,"source":""},{"name":"산굼부리","category":"산/오름","description":"한라산 기생화산 중 드문 평지형 마르형 분화구로 억새 군락이 유명","score":72,"selected":false,"source":""},{"name":"거문오름","category":"산/오름","description":"만장굴 등 용암동굴을 만든 분화구로 유네스코 세계유산, 탐방 예약제 운영","score":74,"selected":false,"source":""},{"name":"도두봉","category":"산/오름","description":"제주공항 인근 낮은 오름으로 도두무지개해안도로와 어우러지는 전망 명소","score":65,"selected":false,"source":""},{"name":"용두암","category":"자연 명소","description":"용이 하늘로 오르려다 굳은 모양을 닮은 제주시 해안가 화산암 바위","score":68,"selected":false,"source":""},{"name":"외돌개","category":"자연 명소","description":"바다 한가운데 홀로 솟은 20m 높이의 기암, 올레길 7코스가 지나는 서귀포 해안","score":75,"selected":false,"source":""},{"name":"새연교","category":"건축/랜드마크","description":"서귀포항과 새섬을 잇는 돛단배 모양의 보행교, 야경 명소","score":66,"selected":false,"source":""},{"name":"이호테우해변","category":"해변","description":"붉은 말 모양 등대가 있는 제주시 인근 해변, 일몰 명소","score":74,"selected":false,"source":""},{"name":"월정리해변","category":"해변","description":"맑은 청록빛 바다와 감각적인 카페 거리가 모여 있는 구좌읍 해변","score":81,"selected":false,"source":""},{"name":"김녕해수욕장","category":"해변","description":"투명한 바다색과 인근 바람개비 해안도로가 어우러진 구좌읍 해변","score":78,"selected":false,"source":""},{"name":"세화해변","category":"해변","description":"구좌읍의 조용한 해변으로 벨롱장 플리마켓과 카페가 있는 감성 스폿","score":70,"selected":false,"source":""},{"name":"삼양검은모래해변","category":"해변","description":"화산 현무암 모래로 이뤄진 검은 백사장, 모래찜질로 알려진 제주시 해변","score":64,"selected":false,"source":""},{"name":"중문색달해변","category":"해변","description":"서핑 명소이자 중문관광단지 인근의 세 가지 색 모래가 섞인 해변","score":77,"selected":false,"source":""},{"name":"동문시장","category":"시장","description":"제주시 대표 전통시장으로 흑돼지, 해산물, 감귤 등 먹거리가 풍부한 야시장 포함","score":83,"selected":false,"source":""},{"name":"서귀포매일올레시장","category":"시장","description":"서귀포 중심가의 아케이드 전통시장, 감귤 초콜릿과 오메기떡 등 간식 명소","score":80,"selected":false,"source":""},{"name":"이중섭거리","category":"역사/문화","description":"화가 이중섭이 머문 서귀포 초가와 미술관이 있는 예술 골목","score":67,"selected":false,"source":""},{"name":"마라도","category":"섬","description":"대한민국 최남단 섬으로 가파도·송악산과 연계해 둘러보는 최남단 기념비 명소","score":76,"selected":false,"source":""}]};
+
+const CAT_ICON = { '산/오름': '⛰️', '해변': '🏖️', '자연 명소': '🌋', '역사/문화': '🏛️', '폭포': '💦',
   '정원/식물원': '🌺', '박물관/미술관': '🖼️', '시장': '🛍️', '건축/랜드마크': '🌉', '섬': '🏝️',
   '테마파크': '🎡', '숲': '🌲', '동굴': '🕳️', '체험/카페': '🍵' };
 
+const EMOJI = {
+  '성산일출봉': '🌅', '천지연폭포': '💦', '한라산': '🗻', '만장굴': '🦇', '협재해수욕장': '🏖️',
+  '함덕해수욕장': '🏄', '우도': '🐂', '섭지코지': '🗼', '용머리해안': '🐉', '중문대포해안 주상절리대': '🧱',
+  '정방폭포': '🌊', '천제연폭포': '🏞️', '엉또폭포': '🌧️', '쇠소깍': '🛶', '비자림': '🌳',
+  '사려니숲길': '🌲', '카멜리아힐': '🌺', '휴애리 자연생활공원': '🐑', '한림공원': '🌴', '생각하는정원': '🪴',
+  '제주 에코랜드 테마파크': '🚂', '오설록 티뮤지엄': '🍵', '아쿠아플라넷 제주': '🐠', '본태박물관': '🏛️',
+  '김영갑갤러리 두모악': '📷', '제주 돌문화공원': '🗿', '제주민속촌': '🏡', '성읍민속마을': '🛖',
+  '제주4·3평화공원': '🕊️', '방주교회': '⛪', '산방산': '⛰️', '송악산': '🌄', '새별오름': '🌾',
+  '금오름': '🌇', '용눈이오름': '🌿', '다랑쉬오름': '🌋', '산굼부리': '🕳️', '거문오름': '🥾',
+  '도두봉': '✈️', '용두암': '🐲', '외돌개': '🪨', '새연교': '🌉', '이호테우해변': '🐎',
+  '월정리해변': '🏝️', '김녕해수욕장': '🌬️', '세화해변': '🎪', '삼양검은모래해변': '⚫', '중문색달해변': '🏄‍♂️',
+  '동문시장': '🐷', '서귀포매일올레시장': '🍊', '이중섭거리': '🎨', '마라도': '🧭'
+};
+
 let DATA = null, activeCat = '전체', keyword = '';
-const imgCache = new Map();           // name -> Promise<{url,page,user}|null>
-
-// 페이지가 열리면 모든 관광지의 이미지를 자동으로 불러온다 (동시 요청 6개로 제한, 실패 시 1회 재시도)
-const MAX_PARALLEL = 6;
-let running = 0;
-const waiting = [];
-
-function pump() {
-  while (running < MAX_PARALLEL && waiting.length) {
-    const job = waiting.shift();
-    running++;
-    job().finally(() => { running--; pump(); });
-  }
-}
-
-function requestImage(item) {
-  const url = `/api/image?name=${encodeURIComponent(item.name)}&category=${encodeURIComponent(item.category)}`;
-  const once = () => fetch(url).then(r => r.ok ? r.json() : Promise.reject(r.status));
-  return once().catch(() => once()).catch(() => null);
-}
-
-function fetchImage(item) {
-  if (!imgCache.has(item.name)) {
-    imgCache.set(item.name, new Promise(resolve => {
-      waiting.push(() => requestImage(item).then(resolve));
-      pump();
-    }));
-  }
-  return imgCache.get(item.name);
-}
-
-function attachImage(thumb, item) {
-  fetchImage(item).then(info => {
-    if (!info || !info.url) return;
-    const img = new Image();
-    img.alt = item.name;
-    img.onload = () => {
-      img.classList.add('on');
-      const a = document.createElement('a');
-      a.className = 'credit'; a.href = info.page; a.target = '_blank'; a.rel = 'noopener';
-      a.textContent = 'Pixabay / ' + info.user;
-      thumb.append(a);
-    };
-    img.src = info.url;
-    thumb.prepend(img);
-  });
-}
 
 function matches(it) {
   if (activeCat !== '전체' && it.category !== activeCat) return false;
@@ -140,13 +106,12 @@ function matches(it) {
   return (it.name + ' ' + it.description + ' ' + it.category).toLowerCase().includes(keyword);
 }
 
-function card(it, i) {
+function card(it) {
   const el = document.createElement('article');
   el.className = 'card';
   const thumb = document.createElement('div');
   thumb.className = 'thumb';
-  thumb.dataset.i = i;
-  thumb.innerHTML = `<span aria-hidden="true">${ICONS[it.category] || '📍'}</span>` +
+  thumb.innerHTML = `<span aria-hidden="true">${EMOJI[it.name] || CAT_ICON[it.category] || '📍'}</span>` +
     (it.selected ? '<span class="pick">★ 추천</span>' : '') +
     `<span class="badge">${it.score}점</span>`;
   const body = document.createElement('div');
@@ -158,14 +123,12 @@ function card(it, i) {
   meta.innerHTML = `<span class="tag"></span><span class="bar"><i style="width:${it.score}%"></i></span>`;
   meta.querySelector('.tag').textContent = it.category;
   body.append(h, p, meta);
-  if (it.source) {
+  if (it.source && /^https?:\/\//.test(it.source)) {
     const s = document.createElement('a');
-    s.className = 'src'; s.textContent = '출처 보기'; s.target = '_blank'; s.rel = 'noopener';
-    s.href = /^https?:\/\//.test(it.source) ? it.source : '#';
+    s.className = 'src'; s.textContent = '출처 보기'; s.href = it.source; s.target = '_blank'; s.rel = 'noopener';
     body.append(s);
   }
   el.append(thumb, body);
-  attachImage(thumb, it);
   return el;
 }
 
@@ -173,20 +136,23 @@ function render() {
   const main = document.getElementById('main');
   main.replaceChildren();
   const groups = new Map();
-  DATA.items.forEach((it, i) => {
+  DATA.items.forEach(it => {
     if (!matches(it)) return;
     if (!groups.has(it.category)) groups.set(it.category, []);
-    groups.get(it.category).push([it, i]);
+    groups.get(it.category).push(it);
   });
   if (!groups.size) { main.innerHTML = '<div class="empty">검색 결과가 없습니다.</div>'; return; }
   const order = [...groups.keys()].sort((a, b) => groups.get(b).length - groups.get(a).length);
   for (const cat of order) {
+    const list = groups.get(cat).sort((a, b) => b.score - a.score);
+    const avg = Math.round(list.reduce((s, x) => s + x.score, 0) / list.length);
     const sec = document.createElement('section');
-    const list = groups.get(cat).sort((a, b) => b[0].score - a[0].score);
-    sec.innerHTML = `<h2>${ICONS[cat] || ''} ${cat} <small>${list.length}곳</small></h2>`;
+    sec.id = 'cat-' + cat;
+    sec.innerHTML = `<div class="sec-head"><h2>${CAT_ICON[cat] || ''} ${cat}</h2>` +
+      `<small>${list.length}곳 · 평균 ${avg}점 · 대표 ${list[0].name}</small></div>`;
     const grid = document.createElement('div');
     grid.className = 'grid';
-    list.forEach(([it, i]) => grid.append(card(it, i)));
+    list.forEach(it => grid.append(card(it)));
     sec.append(grid);
     main.append(sec);
   }
@@ -208,7 +174,7 @@ function renderChips() {
   });
 }
 
-fetch('jeju_attractions.json').then(r => r.json()).then(d => {
+function start(d) {
   DATA = d;
   document.getElementById('title').textContent = d.topic;
   document.getElementById('sub').textContent = `${d.region} · 카테고리별 ${d.items.length}곳`;
@@ -216,9 +182,12 @@ fetch('jeju_attractions.json').then(r => r.json()).then(d => {
   document.getElementById('q').addEventListener('input', e => {
     keyword = e.target.value.trim().toLowerCase(); render();
   });
-}).catch(() => {
-  document.getElementById('main').innerHTML = '<div class="empty">데이터를 불러오지 못했습니다.</div>';
-});
+}
+
+fetch('jeju_attractions.json')
+  .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .catch(() => EMBEDDED)
+  .then(start);
 </script>
 </body>
 </html>
